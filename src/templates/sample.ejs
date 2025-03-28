@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title || 'Untitled Page' %></title>
+    <meta name="description" content="<%= description || '' %>" />
+    <meta name="author" content="<%= author || '' %>" />
+  </head>
+  <body>
+    <header>
+      <h1><%= title || 'Untitled Page' %></h1>
+      <% if (date) { %>
+      <p><em><%= date %></em></p>
+      <% } %>
+    </header>
+
+    <section><%- content %></section>
+
+    <footer>
+      <p>Author: <%= author || 'Anonymous' %></p>
+      <% if (tags?.length) { %>
+      <p>Tags: <%= tags.join(", ") %></p>
+      <% } %> <% if (cliOptions) { %>
+      <pre><code>CLI Options: <%= JSON.stringify(cliOptions, null, 2) %></code></pre>
+      <% } %>
+    </footer>
+  </body>
+</html>
