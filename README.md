@@ -11,13 +11,31 @@ npm i --save-dev @types/ejs
 npm install --save-dev rimraf //support cross platform for removing files
 npm install --save-dev http-server
 npm install dayjs
-npm install module-alias
+npm install module-alias //not required
 
 ## 🚧 Build the Project
 
+### Choose one of the following based on your use case and environment:
+
+### For CLI-only usage (no upload preview):
+
+npm run buildcli
+
+### For upload + preview support (with PowerShell):
+
 npm run build
 
-## 🚀 Generate HTML Files
+## If you're not using PowerShell, use the appropriate command:
+
+### Unix/macOS/Linux:
+
+npm run buildcp
+
+### Cross-platform (requires shx):
+
+npm run buildshx
+
+## 🚀 Generate HTML Files using CLI
 
 ### Generate from index.md
 
@@ -56,16 +74,14 @@ dist/ # Output folder (generated HTML)
 
 ### ✅ Features
 
-Supports front matter (YAML) parsing
-
-Custom CLI overrides (title, author, layout, etc.)
-
-Layout-specific rendering with fallback handling
-
-Tags, description, and formatted date support
-
-Debug mode for inspection
-
-Cross-platform file cleanup via rimraf
-
-Lightweight dev preview with http-server
+- Supports front matter (YAML) parsing
+- Custom CLI overrides (`title`, `author`, `layout`, etc.)
+- Layout-specific rendering with fallback to `sample.ejs`
+- Smart output filename based on the uploaded or specified file
+- Tags, description, and formatted date support
+- Dual usage modes:
+  - 🖥️ **CLI-based generation**
+  - 🌐 **Web UI upload + preview**
+- Debug mode for inspecting processed content
+- Cross-platform file cleanup via `rimraf`
+- Lightweight live preview using `http-server`

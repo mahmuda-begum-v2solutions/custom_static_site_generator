@@ -5,11 +5,6 @@ import { marked } from "marked";
 import { resolveFrontMatter } from "./utils/frontmatter.js";
 import type { CLIOptions } from "./types/cli-options.js";
 import { renderTemplate } from "./utils/render.js";
-import http from "http";
-
-interface MyOptions extends CLIOptions {
-  debug?: boolean;
-}
 
 // Parse CLI arguments into CLIOptions (or extended CLI option types)
 function parseArgs<T extends CLIOptions = CLIOptions>(): T {
@@ -154,97 +149,8 @@ async function generatePage<T extends CLIOptions = CLIOptions>() {
   console.log(`✅ Generated: ${outputPath}`);
 }
 
-if (process.argv.length > 2) {
-  // CLI mode
-  generatePage<MyOptions>();
-} else {
-  // HTTP server mode
-  const server = http.createServer((req, res) => {
-    if (req.method === "POST" && req.url === "/upload") {
-      let body = "";
-      req.on("data", (chunk) => {
-        body += chunk.toString();
-      });
-      req.on("end", () => {
-        (async () => {
-          try {
-            const { filename, content } = JSON.parse(body);
-            const outputName = await generateHtml(content, filename); // ✅ Await async call
-            res.writeHead(200, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ preview: `/${outputName}` }));
-          } catch (err) {
-            console.error("❌ Error generating HTML:", err);
-            res.writeHead(500);
-            res.end("Invalid request");
-          }
-        })();
-      });
-    } else if (req.method === "GET") {
-      const filePath =
-        req.url === "/" ? "dist/index.html" : path.join("dist", req.url!);
-      fs.readFile(filePath, (err, data) => {
-        if (err) {
-          res.writeHead(404);
-          res.end("Not found");
-        } else {
-          const ext = path.extname(filePath);
-          const isHtml = ext === ".html";
-          res.writeHead(200, {
-            "Content-Type": isHtml ? "text/html; charset=utf-8" : "text/plain",
-          });
-          res.end(data);
-        }
-      });
-    } else {
-      res.writeHead(405);
-      res.end("Method Not Allowed");
-    }
-  });
-
-  server.listen(8080, () => {
-    console.log("Server running at http://localhost:8080");
-  });
+interface MyOptions extends CLIOptions {
+  debug?: boolean;
 }
 
-async function generateHtml<T extends CLIOptions = CLIOptions>(
-  markdownContent: string,
-  filename: string,
-  cliOptions?: T
-): Promise<string> {
-  const outputName = filename.replace(/\.md$/, ".html");
-
-  // If there's no frontmatter, provide empty object to avoid crash
-  const { content, data } = matter(markdownContent);
-  const htmlContent = marked(content);
-  const frontMatter = resolveFrontMatter(data, cliOptions || {});
-
-  const layoutDir = path.join(process.cwd(), "src", "templates");
-  const selectedLayout = frontMatter.layout || "sample";
-  let layoutPath = path.join(layoutDir, `${selectedLayout}.ejs`);
-
-  if (!fs.existsSync(layoutPath)) {
-    console.warn(
-      `⚠️ Layout "${selectedLayout}.ejs" not found. Falling back to sample.ejs`
-    );
-    layoutPath = path.join(layoutDir, "sample.ejs");
-  }
-
-  if (!fs.existsSync(layoutPath)) {
-    throw new Error(`❌ Layout file not found: ${layoutPath}`);
-  }
-
-  const template = fs.readFileSync(layoutPath, "utf-8");
-
-  const finalHtml = renderTemplate(template, {
-    ...frontMatter,
-    cliOptions,
-    content: htmlContent,
-  });
-
-  const outputPath = path.resolve("dist", outputName);
-  fs.mkdirSync("dist", { recursive: true });
-  fs.writeFileSync(outputPath, finalHtml, "utf-8");
-
-  console.log(`✅ Generated: ${outputPath}`);
-  return outputName;
-}
+generatePage<MyOptions>();

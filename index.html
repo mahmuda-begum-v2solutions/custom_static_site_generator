@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Markdown File Uploader</title>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f0f2f5;
+        margin: 0;
+        padding: 50px 0;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 500px;
+        background-color: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      h2 {
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      input[type="file"] {
+        display: block;
+        width: 100%;
+        margin-bottom: 15px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+      }
+
+      button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 14px;
+        margin: 5px;
+        transition: background-color 0.2s ease-in-out;
+      }
+
+      button:hover {
+        background-color: #0056b3;
+      }
+
+      #preview {
+        display: none;
+        margin-top: 20px;
+        padding: 15px;
+        border: 1px solid #ddd;
+        background-color: #f9f9f9;
+        text-align: left;
+        border-radius: 6px;
+        font-family: monospace;
+        white-space: pre-wrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Upload a Markdown File</h2>
+      <input type="file" id="fileInput" accept=".md" />
+      <button id="uploadButton">Upload</button>
+      <button id="previewButton" style="display: none">Preview</button>
+      <div id="preview"></div>
+    </div>
+    <script>
+      const fileInput = document.getElementById("fileInput");
+      const uploadButton = document.getElementById("uploadButton");
+      const previewButton = document.getElementById("previewButton");
+
+      let previewURL = "";
+
+      uploadButton.addEventListener("click", () => {
+        const file = fileInput.files[0];
+        if (!file) {
+          alert("Please select a file.");
+          return;
+        }
+
+        if (!file.name.endsWith(".md")) {
+          alert("Only .md files are allowed.");
+          return;
+        }
+
+        if (file.size > 2 * 1024 * 1024) {
+          alert("File size must be under 2MB.");
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = () => {
+          const markdown = reader.result;
+
+          fetch("http://localhost:8080/upload", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              filename: file.name,
+              content: markdown,
+            }),
+          })
+            .then((res) => res.json())
+            .then((data) => {
+              if (data.preview) {
+                previewURL = data.preview;
+                previewButton.style.display = "inline-block";
+              } else {
+                alert("Upload succeeded but no preview URL returned.");
+              }
+            })
+            .catch((err) => {
+              console.error(err);
+              alert("Error uploading file.");
+            });
+        };
+        reader.readAsText(file);
+      });
+
+      previewButton.addEventListener("click", () => {
+        if (previewURL) {
+          window.open(previewURL, "_blank");
+          fileInput.value = ""; // Clear the file input
+          previewButton.style.display = "none"; // Hide the preview button
+        }
+      });
+    </script>
+  </body>
+</html>
